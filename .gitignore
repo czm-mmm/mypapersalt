@@ -1,0 +1,20 @@
+node_modules/
+dist/
+
+.env
+.env.*
+!.env.example
+*.log
+
+# Local design previews and export artifacts
+card-png/
+card-pattern-variants/
+card-art-v2-preview.png
+card-redesign-final.png
+*.zip
+
+# Local-only export helpers contain machine-specific runtime paths
+scripts/
+
+.DS_Store
+Thumbs.db
