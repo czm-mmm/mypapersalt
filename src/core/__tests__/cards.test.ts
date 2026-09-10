@@ -1,5 +1,7 @@
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { COLLECTOR_SCORE_GUIDES, collectorCardValue, countDeckColors, createDeck, KIND_META } from '../cards'
+import { COLLECTOR_SCORE_GUIDES, cardImageFileName, collectorCardValue, countDeckColors, createDeck, KIND_META } from '../cards'
 
 describe('基础牌组', () => {
   it('包含58张唯一卡牌，并符合牌型数量', () => {
@@ -9,6 +11,19 @@ describe('基础牌组', () => {
     for (const [kind, meta] of Object.entries(KIND_META)) {
       expect(deck.filter((card) => card.kind === kind)).toHaveLength(meta.count)
     }
+  })
+
+  it('逐张映射到58张最终成品牌面图片', () => {
+    const deck = createDeck()
+    const imageFiles = deck.map(cardImageFileName)
+
+    expect(new Set(imageFiles).size).toBe(58)
+    expect(imageFiles[0]).toBe('01_crab-1_deep-blue.png')
+    expect(imageFiles[57]).toBe('58_captain-1_sea-green.png')
+    imageFiles.forEach((file, index) => {
+      expect(file.startsWith(String(index + 1).padStart(2, '0'))).toBe(true)
+      expect(existsSync(resolve('public/cards', file))).toBe(true)
+    })
   })
 
   it('符合基础版11种颜色总数', () => {

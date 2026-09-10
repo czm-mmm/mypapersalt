@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { COLLECTOR_SCORE_GUIDES, COLOR_META, KIND_META, collectorCardValue } from '../core/cards'
+import { COLLECTOR_SCORE_GUIDES, COLOR_META, KIND_META, cardImageFileName, collectorCardValue } from '../core/cards'
 import type { Card } from '../core/types'
 import EffectMark from './EffectMark.vue'
-import OrigamiArt from './OrigamiArt.vue'
 import OrigamiArtConcept from './OrigamiArtConcept.vue'
 
 const props = withDefaults(defineProps<{ card?: Card; hidden?: boolean; compact?: boolean; selected?: boolean; disabled?: boolean; conceptVariant?: 1 | 2 | 3 }>(), {
@@ -18,6 +17,9 @@ const meta = computed(() => props.card ? KIND_META[props.card.kind] : null)
 const printedCollectorValue = computed(() => props.card ? collectorCardValue(props.card) : null)
 const scoreGuideLines = computed(() => props.card ? COLLECTOR_SCORE_GUIDES[props.card.kind] ?? null : null)
 const scoreGuideLabel = computed(() => scoreGuideLines.value ? `累计计分：${scoreGuideLines.value.join('、')}` : '')
+const cardFaceSrc = computed(() => props.card
+  ? `${import.meta.env.BASE_URL}cards/${cardImageFileName(props.card)}`
+  : '')
 const KIND_THEMES: Record<NonNullable<typeof props.card>['kind'], { a: string; b: string; ink: string; accent: string }> = {
   crab: { a: '#efad82', b: '#d86657', ink: '#fffdf4', accent: '#f4cb94' },
   boat: { a: '#66bdca', b: '#287f9a', ink: '#fffdf4', accent: '#f1cc73' },
@@ -51,7 +53,7 @@ const style = computed(() => {
   <button
     type="button"
     class="game-card"
-    :class="[{ hidden, compact, selected, collector: printedCollectorValue !== null }, card ? `kind-${card.kind}` : '']"
+    :class="[{ hidden, compact, selected, collector: printedCollectorValue !== null, 'image-face': !!card && !hidden && !conceptVariant }, card ? `kind-${card.kind}` : '']"
     :style="style"
     :disabled="disabled"
     :aria-label="hidden ? '牌背' : `${meta?.name}，${palette?.name}`"
@@ -61,40 +63,49 @@ const style = computed(() => {
       <div class="back-wave" />
     </template>
     <template v-else>
-      <svg class="wave-bands" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
-        <path class="wave-middle" d="M-10 103 C6 86 18 99 32 78 C46 62 58 78 72 57 C86 41 98 55 112 34 L112 150 L-10 150 Z" />
-        <path class="wave-lower" d="M-10 151 C6 134 18 147 32 126 C46 110 58 126 72 105 C86 89 98 103 112 82 L112 150 L-10 150 Z" />
-        <path class="wave-line" d="M-10 103 C6 86 18 99 32 78 C46 62 58 78 72 57 C86 41 98 55 112 34" />
-        <path class="wave-line wave-line-lower" d="M-10 151 C6 134 18 147 32 126 C46 110 58 126 72 105 C86 89 98 103 112 82" />
-      </svg>
-      <div class="card-topline">
-        <span class="kind-name">{{ meta?.name }}</span>
-        <span
-          v-if="scoreGuideLines"
-          class="collector-value score-guide"
-          :aria-label="scoreGuideLabel"
-        >
-          <b v-for="value in scoreGuideLines" :key="value">{{ value }}</b>
-        </span>
-        <span
-          v-else-if="printedCollectorValue !== null"
-          class="collector-value"
-          :aria-label="`累计 ${printedCollectorValue} 分`"
-        >{{ printedCollectorValue }}</span>
-        <EffectMark v-else class="card-effect" :kind="card.kind" />
-      </div>
-      <div class="art-wrap">
-        <OrigamiArtConcept v-if="conceptVariant" :kind="card.kind" :variant="conceptVariant" />
-        <OrigamiArt v-else :kind="card.kind" :count="card.artCount" />
-      </div>
-      <div class="card-footer">
-        <span v-if="printedCollectorValue === null" class="type-chip">{{ meta?.short }}</span>
-        <span class="color-name" :aria-label="`牌色：${palette?.name}`">
-          <i />
-          <em v-if="printedCollectorValue !== null">牌色</em>
-          <span>{{ palette?.name }}</span>
-        </span>
-      </div>
+      <img
+        v-if="!conceptVariant"
+        class="card-face-image"
+        :src="cardFaceSrc"
+        alt=""
+        aria-hidden="true"
+        draggable="false"
+      >
+      <template v-else>
+        <svg class="wave-bands" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
+          <path class="wave-middle" d="M-10 103 C6 86 18 99 32 78 C46 62 58 78 72 57 C86 41 98 55 112 34 L112 150 L-10 150 Z" />
+          <path class="wave-lower" d="M-10 151 C6 134 18 147 32 126 C46 110 58 126 72 105 C86 89 98 103 112 82 L112 150 L-10 150 Z" />
+          <path class="wave-line" d="M-10 103 C6 86 18 99 32 78 C46 62 58 78 72 57 C86 41 98 55 112 34" />
+          <path class="wave-line wave-line-lower" d="M-10 151 C6 134 18 147 32 126 C46 110 58 126 72 105 C86 89 98 103 112 82" />
+        </svg>
+        <div class="card-topline">
+          <span class="kind-name">{{ meta?.name }}</span>
+          <span
+            v-if="scoreGuideLines"
+            class="collector-value score-guide"
+            :aria-label="scoreGuideLabel"
+          >
+            <b v-for="value in scoreGuideLines" :key="value">{{ value }}</b>
+          </span>
+          <span
+            v-else-if="printedCollectorValue !== null"
+            class="collector-value"
+            :aria-label="`累计 ${printedCollectorValue} 分`"
+          >{{ printedCollectorValue }}</span>
+          <EffectMark v-else class="card-effect" :kind="card.kind" />
+        </div>
+        <div class="art-wrap">
+          <OrigamiArtConcept :kind="card.kind" :variant="conceptVariant" />
+        </div>
+        <div class="card-footer">
+          <span v-if="printedCollectorValue === null" class="type-chip">{{ meta?.short }}</span>
+          <span class="color-name" :aria-label="`牌色：${palette?.name}`">
+            <i />
+            <em v-if="printedCollectorValue !== null">牌色</em>
+            <span>{{ palette?.name }}</span>
+          </span>
+        </div>
+      </template>
     </template>
   </button>
 </template>
@@ -124,6 +135,9 @@ const style = computed(() => {
   vertical-align:top;
 }
 .game-card::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .13; background-image: repeating-linear-gradient(102deg, transparent 0 8px, rgba(255,255,255,.2) 8px 9px); mix-blend-mode:soft-light; }
+.game-card.image-face { padding:0; border:0; background:transparent; }
+.game-card.image-face::after { display:none; }
+.card-face-image { display:block; width:100%; height:100%; border-radius:inherit; object-fit:cover; user-select:none; pointer-events:none; }
 .game-card:hover:not(:disabled) { transform: translateY(-6px); box-shadow: 0 14px 26px rgba(18,56,66,.25); }
 .game-card.selected { transform: translateY(-10px); outline: 4px solid #fff6c5; outline-offset: 2px; }
 .game-card:disabled { cursor: default; }

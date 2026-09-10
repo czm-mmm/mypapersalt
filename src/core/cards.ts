@@ -73,6 +73,30 @@ const BLUEPRINTS: Array<[CardKind, CardColor[]]> = [
   ['captain', ['sea-green']],
 ]
 
+const CARD_KIND_OFFSETS: Record<CardKind, number> = {
+  crab: 0,
+  boat: 9,
+  fish: 17,
+  shark: 24,
+  swimmer: 29,
+  mermaid: 34,
+  shell: 38,
+  octopus: 44,
+  penguin: 49,
+  sailor: 52,
+  lighthouse: 54,
+  shoal: 55,
+  'penguin-colony': 56,
+  captain: 57,
+}
+
+/** 返回该实体牌对应的最终成品牌面 PNG 文件名。 */
+export function cardImageFileName(card: Card): string {
+  const copyNumber = Number(card.id.slice(card.id.lastIndexOf('-') + 1))
+  const deckNumber = CARD_KIND_OFFSETS[card.kind] + copyNumber
+  return `${String(deckNumber).padStart(2, '0')}_${card.id}_${card.color}.png`
+}
+
 export function createDeck(): Card[] {
   const cards: Card[] = []
   for (const [kind, colors] of BLUEPRINTS) {
